@@ -641,7 +641,7 @@ export default function SmartAfterLanding() {
             </motion.div>
 
             <div className="mt-8 pt-8 border-t border-slate-800 text-center text-slate-500 text-sm">
-              © 2024 SmartAfter. All rights reserved.
+            © {new Date().getFullYear()} SmartAfter. All rights reserved.
             </div>
           </div>
         </div>
