@@ -628,16 +628,13 @@ export default function SmartAfterLanding() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="flex items-center justify-center gap-8 text-sm text-slate-400"
             >
-              <a href="#" className="hover:text-white transition-colors">
+              <a href="/privacy.pdf" target="_blank" className="hover:text-white transition-colors">
                 Privacy Policy
               </a>
-              <a href="#" className="hover:text-white transition-colors">
+              <a href="mailto:contact@smartafter.com?subject=Contact%20SmartAfter&body=Hello%20SmartAfter%20Team," target="_blank" className="hover:text-white transition-colors">
                 Contact
               </a>
-              <a href="#" className="hover:text-white transition-colors flex items-center gap-2">
-                <Twitter className="h-4 w-4" />
-                Twitter
-              </a>
+      
             </motion.div>
 
             <div className="mt-8 pt-8 border-t border-slate-800 text-center text-slate-500 text-sm">
