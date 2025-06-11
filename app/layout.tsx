@@ -36,6 +36,11 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  icons: [
+    { rel: "icon", url: "/favicon.ico" },
+    { rel: "shortcut icon", url: "/favicon-16x16.png" },
+    { rel: "apple-touch-icon", url: "/apple-touch-icon.png" },
+  ],
   viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
   themeColor: "#5B5FEE",
     generator: 'v0.dev'

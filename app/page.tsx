@@ -1,7 +1,5 @@
 "use client"
-
 import type React from "react"
-
 import { useState, useRef } from "react"
 import { motion, useInView, useScroll, useTransform } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -68,23 +66,41 @@ export default function SmartAfterLanding() {
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"])
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email) return
-
-    setIsSubmitting(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    toast.success("🎉 Welcome to SmartAfter!", {
-      description: "You're now on our exclusive waitlist. We'll notify you first when we launch!",
-      duration: 4000,
-    })
-
-    setEmail("")
-    setIsSubmitting(false)
-    setWaitlistCount((prev) => prev + 1)
-  }
+    e.preventDefault();
+    if (!email) return;
+    setIsSubmitting(true);
+  
+    try {
+      const form = new URLSearchParams();
+      form.append("email", email);
+  
+      const response = await fetch("https://script.google.com/macros/s/AKfycbyZeTdM88aVbnYWQBs18HIaxw7PRx6iMp3ng2iBTSKBREunql9SL7Kb_OnwWJeeJZA4BA/exec", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: form.toString(),
+      });
+  
+      const result = await response.text(); 
+      console.log("Submission result:", result);
+  
+      toast.success("🎉 Welcome to SmartAfter!", {
+        description: "You're now on our exclusive waitlist!",
+        duration: 4000,
+      });
+  
+      setEmail("");
+      setWaitlistCount((prev) => prev + 1);
+    } catch (err) {
+      console.error("Submission failed:", err);
+      toast.error("Failed to join. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  
 
   const benefits = [
     {
