@@ -16,8 +16,18 @@ export const metadata: Metadata = {
     "SmartAfter organizes all your online orders, receipts, and return alerts — from Gmail, automatically. Join 1,000+ users saving ₹2,847/month.",
   keywords:
     "purchase tracking, receipt management, return alerts, warranty tracking, gmail integration, online shopping, e-commerce",
+  applicationName: "SmartAfter",
   authors: [{ name: "SmartAfter Team" }],
   creator: "SmartAfter",
+  generator: "v0.dev",
+  manifest: "/site.webmanifest",
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: "https://smart-after.vercel.app",
+  },
   openGraph: {
     title: "SmartAfter - Never Miss a Return. Never Lose a Receipt.",
     description:
@@ -25,16 +35,21 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     siteName: "SmartAfter",
+    images: [
+      {
+        url: "smartAfter.png",
+        width: 1200,
+        height: 630,
+        alt: "SmartAfter App Preview",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "SmartAfter - Never Miss a Return. Never Lose a Receipt.",
     description:
       "SmartAfter organizes all your online orders, receipts, and return alerts — from Gmail, automatically.",
-  },
-  robots: {
-    index: true,
-    follow: true,
+    images: ["smartAfter.png"],
   },
   icons: [
     { rel: "icon", url: "/favicon.ico" },
@@ -43,8 +58,8 @@ export const metadata: Metadata = {
   ],
   viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
   themeColor: "#5B5FEE",
-    generator: 'v0.dev'
-}
+};
+
 
 export default function RootLayout({
   children,
