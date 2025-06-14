@@ -1,7 +1,7 @@
 "use client"
 import type React from "react"
 import { useState, useRef } from "react"
-import { motion, useInView, useScroll, useTransform } from "framer-motion"
+import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -21,6 +21,9 @@ import {
   Bell,
 } from "lucide-react"
 
+// Assuming you have 'sonner' installed and configured for toasts
+import { toast } from "sonner"
+
 const fadeInUp = {
   initial: { opacity: 0, y: 40 },
   animate: { opacity: 1, y: 0 },
@@ -39,8 +42,10 @@ const staggerContainer = {
 
 export default function SmartAfterRefined() {
   const [email, setEmail] = useState("")
+  const [emailError, setEmailError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [waitlistCount, setWaitlistCount] = useState(1247)
+  const [hasJoined, setHasJoined] = useState(false)
 
   const heroRef = useRef(null)
   const demoRef = useRef(null)
@@ -57,17 +62,67 @@ export default function SmartAfterRefined() {
   const { scrollYProgress } = useScroll()
   const backgroundY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"])
 
-  const handleEmailSubmit = async () => {
-    if (!email) return
-    setIsSubmitting(true)
-
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    setEmail("")
-    setWaitlistCount((prev) => prev + 1)
-    setIsSubmitting(false)
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!email) {
+      return "Email is required."
+    }
+    if (!emailRegex.test(email)) {
+      return "Please enter a valid email address."
+    }
+    return null
   }
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const error = validateEmail(email);
+    if (error) {
+      setEmailError(error);
+      return;
+    }
+
+    setEmailError(null);
+    setIsSubmitting(true);
+
+    try {
+      const form = new URLSearchParams();
+      form.append("email", email);
+
+      const response = await fetch("https://script.google.com/macros/s/AKfycbyZeTdM88aVbnYWQBs18HIaxw7PRx6iMp3ng2iBTSKBREunql9SL7Kb_OnwWJeeJZA4BA/exec", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: form.toString(),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API submission failed: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const result = await response.text();
+      console.log("Submission result:", result);
+
+      toast.success("🎉 Welcome to SmartAfter!", {
+        description: "You're now on our exclusive waitlist!",
+        duration: 4000,
+      });
+
+      setEmail("");
+      setWaitlistCount((prev) => prev + 1);
+      setHasJoined(true);
+
+    } catch (err) {
+      console.error("Submission failed:", err);
+      toast.error("Failed to join. Please try again.", {
+        description: (err as Error).message || "An unexpected error occurred.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const benefits = [
     {
@@ -113,10 +168,13 @@ export default function SmartAfterRefined() {
     },
   ]
 
-  // Hardcoded avatar placeholders
-  const avatarColors = [
-    "bg-blue-500", "bg-purple-500", "bg-pink-500", "bg-green-500", "bg-indigo-500"
-  ]
+  const avatarImages = [
+    "/avatars/avatar1.png",
+    "/avatars/avatar2.png",
+    "/avatars/avatar3.png",
+    "/avatars/avatar4.png",
+    "/avatars/avatar5.png",
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 overflow-hidden">
@@ -189,40 +247,87 @@ export default function SmartAfterRefined() {
               SmartAfter organizes all your online orders, receipts, and return alerts from Gmail, automatically.
             </motion.p>
 
-            {/* Email Capture - Side by Side */}
+            {/* Email Capture / Joined Message - Conditional Rendering */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={isHeroInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.8, delay: 1 }}
               className="max-w-md mx-auto mb-4"
             >
-              <div className="flex gap-3">
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500/20 bg-white"
-                  required
-                />
-                <Button
-                  onClick={handleEmailSubmit}
-                  disabled={isSubmitting}
-                  className="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Joining...</span>
-                    </div>
-                  ) : (
-                    <>
-                      Join Waitlist
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              </div>
+              <AnimatePresence mode="wait" initial={false}> {/* added initial={false} to prevent animation on first render */}
+                {hasJoined ? (
+                  <motion.div
+                    key="joined-message"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="flex items-center justify-center gap-3 bg-green-500 text-white py-3 px-6 rounded-lg shadow-lg font-semibold text-lg"
+                  >
+                    <CheckCircle className="h-6 w-6" />
+                    <span>You've Joined!</span>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="join-form"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  >
+                    {/* Wrap input and button in a <form> and handle onSubmit */}
+                    <form onSubmit={handleEmailSubmit} className="flex flex-col sm:flex-row gap-3">
+                      <Input
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (emailError) setEmailError(null);
+                        }}
+                        className={`flex-1 h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500/20 bg-white ${emailError ? "border-red-500 focus:border-red-500" : ""}`}
+                        required
+                      />
+                      <Button
+                        type="submit" // Set type to submit for form interaction
+                        disabled={isSubmitting}
+                        className="h-12 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                      >
+                        {isSubmitting ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <span>Joining...</span>
+                          </div>
+                        ) : (
+                          <>
+                            Join Waitlist
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                    {/* Error message container, controlled by height and opacity */}
+                    <AnimatePresence> {/* This AnimatePresence ensures the error message can animate out */}
+                      {emailError && (
+                        <motion.p
+                          key="error-text" // Unique key for AnimatePresence
+                          initial={{ opacity: 0, height: 0, marginTop: 0 }} // Start hidden, no height
+                          animate={{ opacity: 1, height: "auto", marginTop: "0.5rem" }} // Animate to visible, auto height, margin
+                          exit={{ opacity: 0, height: 0, marginTop: 0 }} // Animate out
+                          transition={{ duration: 0.3, ease: "easeOut" }}
+                          className="text-red-600 text-sm overflow-hidden" // overflow-hidden is key for height animation
+                          style={{
+                              // Ensures text isn't cut off during height animation, and initial display
+                              whiteSpace: emailError ? 'normal' : 'nowrap'
+                          }}
+                        >
+                          {emailError}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
 
             {/* Security Badge */}
@@ -346,15 +451,19 @@ export default function SmartAfterRefined() {
             {/* Animated Avatars */}
             <div className="flex items-center justify-center mb-6">
               <div className="flex -space-x-2">
-                {avatarColors.map((color, i) => (
+                {avatarImages.map((src, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, scale: 0 }}
                     animate={isWaitlistInView ? { opacity: 1, scale: 1 } : {}}
                     transition={{ duration: 0.5, delay: i * 0.1 }}
-                    className={`w-12 h-12 rounded-full border-2 border-white shadow-lg flex items-center justify-center ${color}`}
+                    className="w-12 h-12 rounded-full border-2 border-white shadow-lg overflow-hidden"
                   >
-                    <Users className="h-6 w-6 text-white" />
+                    <img
+                      src={src}
+                      alt={`Avatar ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
                   </motion.div>
                 ))}
               </div>
