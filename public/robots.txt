@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://smart-after.vercel.app
+
+# Sitemaps
+Sitemap: https://smart-after.vercel.app/sitemap.xml
